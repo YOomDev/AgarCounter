@@ -25,9 +25,7 @@
 		
 		</video>
 		<script>
-			// Function pointer to fix problems between browsers
-			navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia;
-
+			// All the info the program needs for interacting with the webcam and canvasses
 			const video = document.querySelector('video'); // Video element
 			const c0 = document.querySelector('#unfiltered'); // Unfiltered canvas
 			const c0c = c0.getContext("2d"); // Drawing context for rendering to the unfiltered cavas
@@ -35,11 +33,17 @@
 			const c1c = c1.getContext("2d"); // Drawing context for rendering to the filtered cavas
 			const c2 = document.querySelector('#result');
 			const c2c = c2.getContext("2d");
+
+			// For getting the colors from the image that are used by the mask() function
 			let set_p = -1;
 			let agarPos = { x: 0, y: 0 };
 			let colonyPos = { x: 0, y: 0 };
 			let agarMask = { r: 0, g: 0, b: 0, a: 0 };
 			let colonyMask = { r: 0, g: 0, b: 0, a: 0 };
+
+			// Colors that are applied by the mask() function
+			const agarFill = { r: 255, g: 255, b: 255, a: 255 };
+			const colonyFill = { r: 0, g: 0, b: 255, a: 255 };
 
 			c0.addEventListener('click', e => {
 				if (set_p == -1) { return; }
@@ -92,6 +96,23 @@
 				const colonyIdx = (colonyPos.y * c0.width + agarPos.x) * 4;
 				agarMask = { r: raw[agarIdx], g: raw[agarIdx + 1], b: raw[agarIdx + 2], a: raw[agarIdx + 3] };
 				colonyMask = { r: raw[colonyIdx], g: raw[colonyIdx + 1], b: raw[colonyIdx + 2], a: raw[colonyIdx + 3] };
+
+				let idx = 0; // Array index
+				for (let y = 0; y < c1.height; y++) {
+					for (let x = 0; x < c1.width; x++) {
+						// Get pixel color
+						let color = { r: raw[idx], g: raw[idx + 1], b: raw[idx + 2], a: raw[idx + 3] }
+
+						// Compare to masks
+						// TODO
+
+						// Change 
+						// TODO
+
+						// Make index ready for next pixel 
+						idx += 4;
+					}
+				}
 			}
 
 			function count() {
