@@ -23,7 +23,6 @@
 			<button type="button" onclick="set_p = 1">Set Colony mask color</button>
 		</div>
 		
-		
 		</video>
 		<script>
 			// Function pointer to fix problems between browsers
@@ -49,10 +48,6 @@
 				if (set_p == 1) { colonyPos = { x: e.clientX - rect.left, y: e.clientY - rect.top }; }
 				set_p = -1;
 			});
-
-			function set() {
-				
-			}
 
 			function log() {
 				console.log(agarMask);
