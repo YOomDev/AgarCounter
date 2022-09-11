@@ -8,22 +8,22 @@
 		</style>
 	</head>
 	<body>
-		<device type="media" onchange="update(this.data)" style="display: none;"></device>
-		<div>
-			<video autoplay>
-		</div>
-		<div>
-			<canvas width="320" id="unfiltered" height="240" onclick="set()"></canvas>
-			<canvas width="320" id="filtered" height="240"></canvas>
-			<canvas width="320" id="result" height="240"></canvas>
-		</div>
-		<div>
-			<button type="button" onclick="log()">Test</button>
-			<button type="button" onclick="set_p = 0">Set agar mask color</button>
-			<button type="button" onclick="set_p = 1">Set Colony mask color</button>
+		<div id="content">
+			<device type="media" onchange="update(this.data)" style="display: none;"></device>
+			<div>
+				<video autoplay></video>
+			</div>
+			<div>
+				<canvas width="320" id="unfiltered" height="240"></canvas>
+				<canvas width="320" id="filtered" height="240"></canvas>
+			</div>
+			<div>
+				<button type="button" onclick="log()">Test</button>
+				<button type="button" onclick="set_p = 0">Set agar mask color</button>
+				<button type="button" onclick="set_p = 1">Set Colony mask color</button>
+			</div>
 		</div>
 		
-		</video>
 		<script>
 			// All the info the program needs for interacting with the webcam and canvasses
 			const video = document.querySelector('video'); // Video element
@@ -31,8 +31,6 @@
 			const c0c = c0.getContext("2d"); // Drawing context for rendering to the unfiltered cavas
 			const c1 = document.querySelector('#filtered'); // Filtered canvas
 			const c1c = c1.getContext("2d"); // Drawing context for rendering to the filtered cavas
-			const c2 = document.querySelector('#result');
-			const c2c = c2.getContext("2d");
 
 			// For getting the colors from the image that are used by the mask() function
 			let set_p = -1;
@@ -44,11 +42,13 @@
 			// Colors that are applied by the mask() function
 			const agarFill = { r: 255, g: 255, b: 255, a: 255 };
 			const colonyFill = { r: 0, g: 0, b: 255, a: 255 };
+			const otherFill = { r: 0, g: 0, b: 0, a: 255 };
+			const maskFactor = 0.2;
 
 			c0.addEventListener('click', e => {
 				if (set_p == -1) { return; }
 				let rect = c0.getBoundingClientRect(); // used for getting the offset from the canvas
-				if (set_p == 0) { agarPos = { x: e.clientX - rect.left, y: e.clientY - rect.top }; }
+				if (set_p == 0) { agarPos   = { x: e.clientX - rect.left, y: e.clientY - rect.top }; }
 				if (set_p == 1) { colonyPos = { x: e.clientX - rect.left, y: e.clientY - rect.top }; }
 				set_p = -1;
 			});
@@ -67,11 +67,11 @@
 						c0.height = stream.getVideoTracks()[0].getSettings().height;
 						c1.width = c0.width;
 						c1.height = c0.height;
-						c2.width = c1.width;
-						c2.height = c1.height;
 					})
 					.catch(function (e) {
 						console.log("Something went wrong: " + e);
+						document.querySelector('#content').innerHTML = "<h1>ERROR: Could not load camera source!</h1>"
+						return;
 					});
 
 				update();
@@ -82,20 +82,24 @@
 				// Copy image from webcam to all the canvases
 				c0c.drawImage(video, 0, 0);
 				const imageData = c0c.getImageData(0, 0, c0.width, c0.height);
-				let raw = imageData.data;
 				c1c.putImageData(imageData, 0, 0);
-				c2c.putImageData(imageData, 0, 0);
 
 				mask(); // Create mask image
 				count();
 			}
 
 			function mask() {
-				const raw = c0c.getImageData(0, 0, c0.width, c0.height).data;
-				const agarIdx = (agarPos.y * c0.width + agarPos.x) * 4;
-				const colonyIdx = (colonyPos.y * c0.width + agarPos.x) * 4;
-				agarMask = { r: raw[agarIdx], g: raw[agarIdx + 1], b: raw[agarIdx + 2], a: raw[agarIdx + 3] };
+				const raw  = c0c.getImageData(0, 0, c0.width, c0.height).data;
+				let mask = c1c.createImageData(c0c.getImageData(0, 0, c0.width, c0.height));
+				const agarIdx   = (agarPos.y   * c0.width + agarPos.x  ) * 4;
+				const colonyIdx = (colonyPos.y * c0.width + colonyPos.x) * 4;
+				agarMask   = { r: raw[agarIdx  ], g: raw[agarIdx + 1  ], b: raw[agarIdx + 2  ], a: raw[agarIdx + 3  ] };
 				colonyMask = { r: raw[colonyIdx], g: raw[colonyIdx + 1], b: raw[colonyIdx + 2], a: raw[colonyIdx + 3] };
+
+				const minAgar = { r: agarMask.r - agarMask.r * maskFactor, g: agarMask.g - agarMask.g * maskFactor, b: agarMask.b - agarMask.b * maskFactor, a: agarMask.a - agarMask.a * maskFactor }
+				const maxAgar = { r: agarMask.r + agarMask.r * maskFactor, g: agarMask.g + agarMask.g * maskFactor, b: agarMask.b + agarMask.b * maskFactor, a: agarMask.a + agarMask.a * maskFactor }
+				const minColony = { r: colonyMask.r - colonyMask.r * maskFactor, g: colonyMask.g - colonyMask.g * maskFactor, b: colonyMask.b - colonyMask.b * maskFactor, a: colonyMask.a - colonyMask.a * maskFactor }
+				const maxColony = { r: colonyMask.r + colonyMask.r * maskFactor, g: colonyMask.g + colonyMask.g * maskFactor, b: colonyMask.b + colonyMask.b * maskFactor, a: colonyMask.a + colonyMask.a * maskFactor }
 
 				let idx = 0; // Array index
 				for (let y = 0; y < c1.height; y++) {
@@ -104,15 +108,41 @@
 						let color = { r: raw[idx], g: raw[idx + 1], b: raw[idx + 2], a: raw[idx + 3] }
 
 						// Compare to masks
-						// TODO
-
-						// Change 
-						// TODO
+						if (inRange(color, minAgar, maxAgar)) {
+							// Color the pixel as agarFill
+							mask.data[idx    ] = agarFill.r;
+							mask.data[idx + 1] = agarFill.g;
+							mask.data[idx + 2] = agarFill.b;
+							mask.data[idx + 3] = agarFill.a;
+						} else {
+							if (inRange(color, minColony, maxColony)) {
+								// Color the pixel colonyFill
+								mask.data[idx    ] = colonyFill.r;
+								mask.data[idx + 1] = colonyFill.g;
+								mask.data[idx + 2] = colonyFill.b;
+								mask.data[idx + 3] = colonyFill.a;
+							} else {
+								// Color the pixel otherFill
+								mask.data[idx    ] = otherFill.r;
+								mask.data[idx + 1] = otherFill.g;
+								mask.data[idx + 2] = otherFill.b;
+								mask.data[idx + 3] = otherFill.a;
+							}
+						}
 
 						// Make index ready for next pixel 
 						idx += 4;
+						
 					}
 				}
+				c1c.putImageData(mask, 0, 0);
+			}
+
+			function inRange(color, minColor, maxColor) {
+				return (color.r <= maxColor.r && color.r >= minColor.r)
+					&& (color.g <= maxColor.g && color.g >= minColor.g)
+					&& (color.b <= maxColor.b && color.b >= minColor.b)
+					&& (color.a <= maxColor.a && color.a >= minColor.a);
 			}
 
 			function count() {
