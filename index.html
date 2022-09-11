@@ -9,7 +9,7 @@
 	</head>
 	<body>
 		<div id="content">
-			<device type="media" onchange="update(this.data)" style="display: none;"></device>
+			<device type="media" style="display: none;"></device>
 			<div>
 				<video autoplay></video>
 			</div>
@@ -18,9 +18,12 @@
 				<canvas width="320" id="filtered" height="240"></canvas>
 			</div>
 			<div>
-				<button type="button" onclick="log()">Test</button>
 				<button type="button" onclick="set_p = 0">Set agar mask color</button>
 				<button type="button" onclick="set_p = 1">Set Colony mask color</button>
+			</div>
+			<div>
+				<input type="range" min="0" max="1000" value="300" id="factor">
+				<span id="factorValue"></span>
 			</div>
 		</div>
 		
@@ -51,8 +54,18 @@
 			const agarFill = { r: 255, g: 255, b: 255, a: 255 };
 			const colonyFill = { r: 0, g: 0, b: 255, a: 255 };
 			const otherFill = { r: 0, g: 0, b: 0, a: 255 };
-			const maskFactor = 0.2;
+			let maskFactor = 0.2;
 
+			// Slider for the maskFactor
+			const slider = document.querySelector('#factor');
+			const output = document.querySelector('#factorValue');
+			output.innerHTML = slider.value / 1000; // Display the default slider value
+			slider.oninput = function () { // Update the current slider value (each time you drag the slider handle)
+				maskFactor = this.value / 1000;
+				output.innerHTML = maskFactor;
+			}
+
+			// For setting the mask positions when clicking on the unfiltered canvas
 			c0.addEventListener('click', e => {
 				if (set_p < 0 || set_p > 1) { return; }
 				let rect = c0.getBoundingClientRect(); // used for getting the offset from the canvas
@@ -60,11 +73,6 @@
 				if (set_p == 1) { colonyPos = { x: e.clientX - rect.left, y: e.clientY - rect.top }; }
 				set_p = -1;
 			});
-
-			function log() {
-				console.log(agarMask);
-				console.log(colonyMask);
-			}
 
 			if (navigator.mediaDevices.getUserMedia) {
 				navigator.mediaDevices.getUserMedia({ video: true }) // Get video source
@@ -81,7 +89,7 @@
 					})
 					.catch(function (e) { // If no source: give error
 						console.log("Something went wrong: " + e);
-						document.querySelector('#content').innerHTML = "<h1>ERROR: Could not load camera source!</h1>"
+						//document.querySelector('#content').innerHTML = "<h1>ERROR: Could not load camera source!</h1>"
 						return;
 					});
 
