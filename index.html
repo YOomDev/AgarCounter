@@ -25,6 +25,14 @@
 		</div>
 		
 		<script>
+			// Data types in javascript
+			// const: data that cannot change -> readonly
+			// let/var: data that can change -> mutable
+
+			// Data types from HTML spec used by the browser
+			// ImageData: contains width, height and the color array
+			// UInt8Array: used for color array, size = 4*width*height, 4 times because red, green blue and alpha are seperated into bytes (0->255)
+
 			// All the info the program needs for interacting with the webcam and canvasses
 			const video = document.querySelector('video'); // Video element
 			const c0 = document.querySelector('#unfiltered'); // Unfiltered canvas
@@ -46,7 +54,7 @@
 			const maskFactor = 0.2;
 
 			c0.addEventListener('click', e => {
-				if (set_p == -1) { return; }
+				if (set_p < 0 || set_p > 1) { return; }
 				let rect = c0.getBoundingClientRect(); // used for getting the offset from the canvas
 				if (set_p == 0) { agarPos   = { x: e.clientX - rect.left, y: e.clientY - rect.top }; }
 				if (set_p == 1) { colonyPos = { x: e.clientX - rect.left, y: e.clientY - rect.top }; }
@@ -59,43 +67,55 @@
 			}
 
 			if (navigator.mediaDevices.getUserMedia) {
-				navigator.mediaDevices.getUserMedia({ video: true })
-					.then(function (stream) {
-						video.srcObject = stream;
+				navigator.mediaDevices.getUserMedia({ video: true }) // Get video source
+					.then(function (stream) { // If found use source
+						video.srcObject = stream; // Get data stream from camera
 
+						// Copy camera width and hieght to the first canvas
 						c0.width = stream.getVideoTracks()[0].getSettings().width;
 						c0.height = stream.getVideoTracks()[0].getSettings().height;
-						c1.width = c0.width;
+
+						// Copy settings from first canvas that were obtained from the camera to the second canvas
+						c1.width = c0.width; 
 						c1.height = c0.height;
 					})
-					.catch(function (e) {
+					.catch(function (e) { // If no source: give error
 						console.log("Something went wrong: " + e);
 						document.querySelector('#content').innerHTML = "<h1>ERROR: Could not load camera source!</h1>"
 						return;
 					});
 
+				// Get first images to canvasses
 				update();
-				setInterval(update, 100);
+
+				// Set update timer so it keeps the frames updated every so often
+				setInterval(update, 100); // 100 = 100 ms, so 10 fps is the most it reaches with this setting
 			}
 
 			function update() {
-				// Copy image from webcam to all the canvases
+				// Copy image from webcam to first canvas
 				c0c.drawImage(video, 0, 0);
-				const imageData = c0c.getImageData(0, 0, c0.width, c0.height);
-				c1c.putImageData(imageData, 0, 0);
 
-				mask(); // Create mask image
-				count();
+				mask(); // Create mask image and draw it to the canvas
+				count(); // Count the masked colonies
 			}
 
 			function mask() {
-				const raw  = c0c.getImageData(0, 0, c0.width, c0.height).data;
-				let mask = c1c.createImageData(c0c.getImageData(0, 0, c0.width, c0.height));
+				const tmp = c0c.getImageData(0, 0, c0.width, c0.height); // get imagedata of canvas
+				const raw = tmp.data; // Get image color array
+
+				// Create imagedata to write masked image to and later copy to the masked canvas
+				let mask = c1c.createImageData(tmp);
+
+				// Get indexes for the mask filter colors to more easily read from
 				const agarIdx   = (agarPos.y   * c0.width + agarPos.x  ) * 4;
 				const colonyIdx = (colonyPos.y * c0.width + colonyPos.x) * 4;
+
+				// Get dynamic mask colors
 				agarMask   = { r: raw[agarIdx  ], g: raw[agarIdx + 1  ], b: raw[agarIdx + 2  ], a: raw[agarIdx + 3  ] };
 				colonyMask = { r: raw[colonyIdx], g: raw[colonyIdx + 1], b: raw[colonyIdx + 2], a: raw[colonyIdx + 3] };
 
+				// Get ranges for agar and colonies
 				const minAgar = { r: agarMask.r - agarMask.r * maskFactor, g: agarMask.g - agarMask.g * maskFactor, b: agarMask.b - agarMask.b * maskFactor, a: agarMask.a - agarMask.a * maskFactor }
 				const maxAgar = { r: agarMask.r + agarMask.r * maskFactor, g: agarMask.g + agarMask.g * maskFactor, b: agarMask.b + agarMask.b * maskFactor, a: agarMask.a + agarMask.a * maskFactor }
 				const minColony = { r: colonyMask.r - colonyMask.r * maskFactor, g: colonyMask.g - colonyMask.g * maskFactor, b: colonyMask.b - colonyMask.b * maskFactor, a: colonyMask.a - colonyMask.a * maskFactor }
@@ -104,8 +124,7 @@
 				let idx = 0; // Array index
 				for (let y = 0; y < c1.height; y++) {
 					for (let x = 0; x < c1.width; x++) {
-						// Get pixel color
-						let color = { r: raw[idx], g: raw[idx + 1], b: raw[idx + 2], a: raw[idx + 3] }
+						let color = { r: raw[idx], g: raw[idx + 1], b: raw[idx + 2], a: raw[idx + 3] } // Get pixel color
 
 						// Compare to masks
 						if (inRange(color, minAgar, maxAgar)) {
@@ -114,27 +133,24 @@
 							mask.data[idx + 1] = agarFill.g;
 							mask.data[idx + 2] = agarFill.b;
 							mask.data[idx + 3] = agarFill.a;
+						} else if (inRange(color, minColony, maxColony)) {
+							// Color the pixel as colonyFill
+							mask.data[idx    ] = colonyFill.r;
+							mask.data[idx + 1] = colonyFill.g;
+							mask.data[idx + 2] = colonyFill.b;
+							mask.data[idx + 3] = colonyFill.a;
 						} else {
-							if (inRange(color, minColony, maxColony)) {
-								// Color the pixel colonyFill
-								mask.data[idx    ] = colonyFill.r;
-								mask.data[idx + 1] = colonyFill.g;
-								mask.data[idx + 2] = colonyFill.b;
-								mask.data[idx + 3] = colonyFill.a;
-							} else {
-								// Color the pixel otherFill
-								mask.data[idx    ] = otherFill.r;
-								mask.data[idx + 1] = otherFill.g;
-								mask.data[idx + 2] = otherFill.b;
-								mask.data[idx + 3] = otherFill.a;
-							}
+							// Color the pixel as otherFill
+							mask.data[idx    ] = otherFill.r;
+							mask.data[idx + 1] = otherFill.g;
+							mask.data[idx + 2] = otherFill.b;
+							mask.data[idx + 3] = otherFill.a;
 						}
-
 						// Make index ready for next pixel 
 						idx += 4;
-						
 					}
 				}
+				// Draw the masked image to the filtered canvas
 				c1c.putImageData(mask, 0, 0);
 			}
 
@@ -146,7 +162,7 @@
 			}
 
 			function count() {
-
+				// TODO
 			}
 		</script>
 	</body>
