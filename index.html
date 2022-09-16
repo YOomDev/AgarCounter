@@ -16,6 +16,7 @@
 			<div>
 				<canvas width="320" id="unfiltered" height="240"></canvas>
 				<canvas width="320" id="filtered" height="240"></canvas>
+				<canvas width="320" id="counted" height="240"></canvas>
 			</div>
 			<div>
 				<button type="button" onclick="set_p = 0">Set agar mask color</button>
@@ -24,9 +25,13 @@
 			<div>
 				<input type="range" min="0" max="1000" value="300" id="factor">
 				<span id="factorValue"></span>
+				<input type="checkbox" id="countBool">
+				<label>Count</label>
+			</div>
+			<div>
+				<h1 id="count">0</h1>
 			</div>
 		</div>
-		
 		<script>
 			// Data types in javascript
 			// const: data that cannot change -> readonly
@@ -36,12 +41,15 @@
 			// ImageData: contains width, height and the color array
 			// UInt8Array: used for color array, size = 4*width*height, 4 times because red, green blue and alpha are seperated into bytes (0->255)
 
-			// All the info the program needs for interacting with the webcam and canvasses
+			// All the info the program needs for interacting with the webcam, canvasses and text fields
 			const video = document.querySelector('video'); // Video element
 			const c0 = document.querySelector('#unfiltered'); // Unfiltered canvas
 			const c0c = c0.getContext("2d"); // Drawing context for rendering to the unfiltered cavas
 			const c1 = document.querySelector('#filtered'); // Filtered canvas
 			const c1c = c1.getContext("2d"); // Drawing context for rendering to the filtered cavas
+			const c2 = document.querySelector('#counted'); // Filtered canvas
+			const c2c = c1.getContext("2d"); // Drawing context for rendering to the filtered cavas
+			const totalField = document.querySelector('#count');
 
 			// For getting the colors from the image that are used by the mask() function
 			let set_p = -1;
@@ -64,6 +72,12 @@
 				maskFactor = this.value / 1000;
 				output.innerHTML = maskFactor;
 			}
+
+			// Count checkbox
+			const countCheck = document.querySelector('#countBool');
+
+			// Counter
+			let total = 0;
 
 			// For setting the mask positions when clicking on the unfiltered canvas
 			c0.addEventListener('click', e => {
@@ -89,7 +103,7 @@
 					})
 					.catch(function (e) { // If no source: give error
 						console.log("Something went wrong: " + e);
-						//document.querySelector('#content').innerHTML = "<h1>ERROR: Could not load camera source!</h1>"
+						document.querySelector('#content').innerHTML = "<h1>ERROR: Could not load camera source!</h1>"
 						return;
 					});
 
@@ -105,7 +119,9 @@
 				c0c.drawImage(video, 0, 0);
 
 				mask(); // Create mask image and draw it to the canvas
-				count(); // Count the masked colonies
+				if (countCheck.checked) {
+					count(); // Count the masked colonies
+				}
 			}
 
 			function mask() {
@@ -132,7 +148,7 @@
 				let idx = 0; // Array index
 				for (let y = 0; y < c1.height; y++) {
 					for (let x = 0; x < c1.width; x++) {
-						let color = { r: raw[idx], g: raw[idx + 1], b: raw[idx + 2], a: raw[idx + 3] } // Get pixel color
+						const color = { r: raw[idx], g: raw[idx + 1], b: raw[idx + 2], a: raw[idx + 3] } // Get pixel color
 
 						// Compare to masks
 						if (inRange(color, minAgar, maxAgar)) {
@@ -162,15 +178,66 @@
 				c1c.putImageData(mask, 0, 0);
 			}
 
-			function inRange(color, minColor, maxColor) {
-				return (color.r <= maxColor.r && color.r >= minColor.r)
-					&& (color.g <= maxColor.g && color.g >= minColor.g)
-					&& (color.b <= maxColor.b && color.b >= minColor.b)
-					&& (color.a <= maxColor.a && color.a >= minColor.a);
+			function inRange(color, minColor, maxColor) { // Function for checking if the color values are within the limit of the range calculated before calling this function
+				return (color.r <= maxColor.r && color.r >= minColor.r) &&
+					   (color.g <= maxColor.g && color.g >= minColor.g) &&
+					   (color.b <= maxColor.b && color.b >= minColor.b) &&
+					   (color.a <= maxColor.a && color.a >= minColor.a);
+			}
+
+			function isColor(color, other) {
+				return (color.r == other.r) && (color.g == other.g) && (color.b == other.b) && (color.a == other.a);
 			}
 
 			function count() {
-				// TODO
+				// Create array to keep track of visited pixels
+				let maskData = c1c.getImageData(0, 0, c1.width, c1.height);
+				let countImageData = c2c.createImageData(c1.width, c1.height);
+				countImageData.data.set(maskData.data);
+				let countData = countImageData.data;
+
+				total = 0;
+
+				console.log("counting!\n");
+
+				let idx = 0;
+				for (let y = 0; y < c1.height; y++) {
+					for (let x = 0; x < c1.width; x++) {
+						let color = { r: countData[idx], g: countData[idx + 1], b: countData[idx + 2], a: countData[idx + 3] };
+						if (isColor(color, colonyFill)) {
+							total++;
+
+							// Set color to black to remove from list of todo
+							countData[idx    ] = 0;
+							countData[idx + 1] = 0;
+							countData[idx + 2] = 0;
+							countData[idx + 3] = 255;
+
+							// Search for other cells
+							var arr = [{ x: x, y: y }];
+							while (arr.length > 0) {
+								let tmp = [];
+								for (let i = 0; i < arr.length; i++) {
+									const a = arr[i];
+									if (a.x >= 0 && a.x < c1.width && a.y >= 0 && a.y < c1.height) {
+										color = { r: countData[idx], g: countData[idx + 1], b: countData[idx + 2], a: countData[idx + 3] };
+										if (isColor(color, colonyFill)) {
+											tmp[tmp.length] = { x: a.x - 1, y: a.y };
+											tmp[tmp.length] = { x: a.x + 1, y: a.y };
+											tmp[tmp.length] = { x: a.x    , y: a.y - 1 };
+											tmp[tmp.length] = { x: a.x    , y: a.y + 1 };
+										}
+									}
+								}
+								arr = tmp;
+							}
+						}
+						idx += 4;
+					}
+				}
+				countImageData.data.set(countData);
+				c2c.putImageData(countImageData, 0, 0);
+				totalField.innerHTML = total;
 			}
 		</script>
 	</body>
