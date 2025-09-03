@@ -5,8 +5,8 @@
         <title>Agar Counter | v0.2</title>
         <style>
             .hidden {
-                display: none;
-                visibility: hidden;
+                display: block;
+                visibility: visible;
             }
         </style>
     </head>
@@ -220,13 +220,13 @@
                         // Get pixel color
                         let color = { r: average[color_index], g: average[color_index + 1], b: average[color_index + 2] };
 
-                        let mask_result = MASKS[EMPTY];
-                        for (let i = 0; i < MASKS.length - 1; i++) {
+                        let mask_result = FILLS[EMPTY];
+                        for (let i = 0; i < FILLS.length - 1; i++) {
                             if( color.r < MIN[i].r || color.r > MAX[i].r ||
                                 color.g < MIN[i].r || color.r > MAX[i].r ||
                                 color.b < MIN[i].b || color.r > MAX[i].r
                             ) { continue; } // If not out of expected range for mask then we check next mask
-                            mask_result = MASKS[i + 1]; // Set masked color
+                            mask_result = FILLS[i + 1]; // Set masked color
                             break;
                         }
 
