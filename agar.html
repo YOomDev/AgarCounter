@@ -172,6 +172,7 @@
             function mask() {
                 // Make average image to fix image noise from raw camera input
                 let average = Uint8ClampedArray.from(context_raw.getImageData(0, 0, canvas_raw.width, canvas_raw.height).data); // Make sure an array with the correct size exists
+                let mask = Uint8ClampedArray.from(context_raw.getImageData(0, 0, canvas_raw.width, canvas_raw.height).data);
                 const width = canvas_raw.width;
                 let row_index = 0;
                 let color_index = 0;
@@ -181,7 +182,7 @@
                         color_index = (row_index + x) * 4; // times 4 cuz of 4 short integer values for each color part from rgba
 
                         // Get average color
-                        let color = { r: 0, g: 0, b: 0 }
+                        let color = { r: 0, g: 0, b: 0 };
                         for (let iterator = 0; iterator < max_canvas; iterator++) {
                             color.r += canvasses[iterator][color_index    ];
                             color.g += canvasses[iterator][color_index + 1];
@@ -208,6 +209,32 @@
                     g: MASKS[i + 1].g + (factor * MASKS[i + 1].g),
                     b: MASKS[i + 1].b + (factor * MASKS[i + 1].b)
                 }; }
+
+                // Perform masking
+                for (let y = 0; y < canvas_raw.height; y++) {
+                    row_index = y * width;
+                    for (let x = 0; x < width; x++) {
+                        color_index = (row_index + x) * 4;
+
+                        // Get pixel color
+                        let color = { r: average[color_index], g: average[color_index + 1], b: average[color_index + 2] };
+
+                        let mask_result = MASKS[EMPTY];
+                        for (let i = 0; i < MASKS.length - 1; i++) {
+                            if( color.r < MIN[i].r || color.r > MAX[i].r ||
+                                color.g < MIN[i].r || color.r > MAX[i].r ||
+                                color.b < MIN[i].b || color.r > MAX[i].r
+                            ) { continue; } // If not out of expected range for mask then we check next mask
+                            mask_result = MASKS[i + 1]; // Set masked color
+                            break;
+                        }
+
+                        // Set mask color on output
+                        mask[color_index    ] = mask_result.r;
+                        mask[color_index + 1] = mask_result.g;
+                        mask[color_index + 2] = mask_result.b;
+                    }
+                }
             }
 
             function count() {
