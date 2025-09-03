@@ -25,19 +25,18 @@
             </div>
             <div class="hidden" id="main">
                 <canvas id="raw" width="320" height="240"></canvas>
-                <div>
+                <div class="count">
                     <h1>Count</h1>
                     <input type="checkbox" id="count">
                     <label>Count</label>
                     <p id="countValue">0</p>
                 </div>
-
                 <h1>Inputs</h1>
-                <div>
+                <div class="color">
                     <button type="button" onclick="set_color = AGAR">Set agar mask color</button>
                     <button type="button" onclick="set_color = COLONY">Set Colony mask color</button>
                 </div>
-                <div>
+                <div class="factor">
                     <h2>Factor</h2>
                     <input type="range" min="0" max="1000" value="300" id="factor">
                     <span id="factorValue"></span>
