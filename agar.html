@@ -18,8 +18,10 @@
                 <video autoplay></video>
                 <canvas id="mask" width="320" height="240"></canvas>
             </div>
-            <div>
-
+            <div id="loading">
+                <span>Loading</span>
+            </div>
+            <div class="hidden" id="main">
                 <canvas id="raw" width="320" height="240"></canvas>
                 <div>
                     <h1>Count</h1>
@@ -135,6 +137,11 @@
 
                         // Call the count function every set timeframe
                         setInterval(count, 100 /* milliseconds */);
+
+                        // Remove div that shows the webcam is loading
+                        document.getElementById("loading").remove();
+                        document.getElementById("main").classList.remove("hidden");
+
                     }).catch(function (e) { noDevice(); console.log(e); }); // If no source: give error
             }
 
