@@ -172,7 +172,7 @@
             function mask() {
                 // Make average image to fix image noise from raw camera input
                 let average = Uint8ClampedArray.from(context_raw.getImageData(0, 0, canvas_raw.width, canvas_raw.height).data); // Make sure an array with the correct size exists
-                let mask = Uint8ClampedArray.from(context_raw.getImageData(0, 0, canvas_raw.width, canvas_raw.height).data);
+                let mask = Uint8ClampedArray.from(context_mask.getImageData(0, 0, canvas_raw.width, canvas_raw.height).data);
                 const width = canvas_raw.width;
                 let row_index = 0;
                 let color_index = 0;
