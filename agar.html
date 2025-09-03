@@ -151,6 +151,7 @@
             }
 
             function initCanvas() {
+                context_raw.drawImage(video, 0, 0);
                 const raw = context_raw.getImageData(0, 0, canvas_raw.width, canvas_raw.height).data;
                 for (let i = 0; i < max_canvas; i++) { canvasses[i] = Uint8ClampedArray.from(raw); }
             }
@@ -170,6 +171,8 @@
 
             function count() {
                 context_raw.drawImage(video, 0, 0);
+                canvasses[set_canvas++] = Uint8ClampedArray.from(context_raw.getImageData(0, 0, canvas_raw.width, canvas_raw.height).data);
+                if(set_canvas >= max_canvas) { set_canvas = 0; }
                 total = 0;
                 if (countInput.input.checked) {
                     mask();
