@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>Agar Counter | v0.2</title>
+        <style>
+            .hidden {
+                display: none;
+                visibility: hidden;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="content">
+            <div class="hidden">
+                <h1>Parts used for getting webcam data</h1>
+                <device type="media"></device>
+                <video autoplay></video>
+                <canvas id="mask" width="320" height="240"></canvas>
+            </div>
+            <div>
+
+                <canvas id="raw" width="320" height="240"></canvas>
+                <div>
+                    <h1>Count</h1>
+                    <input type="checkbox" id="count">
+                    <label id="countValue">0</label>
+                </div>
+
+                <h1>Inputs</h1>
+                <div>
+                    <h2>Factor</h2>
+                    <input type="range" min="0" max="1000" value="300" id="factor">
+                    <span id="factorValue"></span>
+                </div>
+
+            </div>
+        </div>
+        <script>
+            ///////////
+            // Ideas //
+            ///////////
+
+            // (optional) Make it possible to choose what device to use
+
+
+
+
+            /////////////
+            // Inputs: //
+            /////////////
+
+            // Factor value
+            const factorSlider = {
+                input: document.querySelector('#factor'),
+                output: document.querySelector('#factorValue')
+            }
+            function getFactor() {
+                let result = factorSlider.input.value / 1000;
+                factorSlider.output.innerHTML = `${result}`;
+                return result;
+            }
+            factorSlider.input.oninput = getFactor;
+
+            // Count checkbox
+            const countInput = {
+                input: document.querySelector('#count'),
+                output: document.querySelector('#countValue')
+            }
+
+            ////////////////
+            // Variables: //
+            ////////////////
+
+            // Color enums
+            const EMPTY  = 0;
+            const AGAR   = 1;
+            const COLONY = 2;
+
+            // Color variables
+            let set_color = 0; // used for setting the mask colors, identifier for which color to be set
+            const MASKS = []; // const arrays can be manipulated but not replaced
+            MASKS[EMPTY ] = { r: 0, g: 0, b: 0 };
+            MASKS[AGAR  ] = { r: 0, g: 0, b: 0 };
+            MASKS[COLONY] = { r: 0, g: 0, b: 0 };
+            const FILLS = [];
+            FILLS[EMPTY ] = { r: 255, g: 255, b: 255 };
+            FILLS[AGAR  ] = { r: 0  , g: 0  , b: 255 };
+            FILLS[COLONY] = { r: 0  , g: 0  , b: 0   };
+
+            // Canvas variables
+            let set_canvas = 0;
+            let max_canvas = 5;
+            let canvas_raw  = document.querySelector('#raw');
+            let context_raw = canvas_raw.getContext("2d");
+            let canvas_mask = document.querySelector('#mask');
+            let context_mask = canvas_raw.getContext("2d");
+            const canvasses = [];
+
+            // Counting
+            let min_size = 5;
+            let factor = getFactor();
+
+            // Device
+            const video = document.querySelector('video'); // Video source such as webcam or digital microscope
+
+            ////////////////
+            // Functions: //
+            ////////////////
+
+            function noDevice() {
+                document.querySelector('#content').innerHTML = "<h1>ERROR: Could not load camera source!</h1>";
+            }
+
+            function checkDevice() {
+                if (!(navigator.mediaDevices.getUserMedia)) { noDevice(); return; }
+                navigator.mediaDevices.getUserMedia({ video: true }) // Get video source
+                    .then(function (stream) { // If found use source
+                        video.srcObject = stream; // Get data stream from camera
+
+                        // Copy camera width and height to the canvasses
+                        canvas_raw.width = stream.getVideoTracks()[0].getSettings().width;
+                        canvas_raw.height = stream.getVideoTracks()[0].getSettings().height;
+                        canvas_mask.width = canvas_raw.width;
+                        canvas_mask.height = canvas_raw.height;
+
+                        // Make color picker work
+                        canvas_raw.addEventListener('click', e => {
+                            let rect = canvas_raw.getBoundingClientRect(); // Get canvas offset
+                            setColor(e.clientX - rect.left, e.clientY - rect.top);
+                        });
+
+                        // Make sure the required stuff for counting gets set up
+                        initCanvas();
+
+                        // Call the count function every set timeframe
+                        setInterval(count, 100 /* milliseconds */);
+                    }).catch(function (e) { noDevice(); console.log(e); }); // If no source: give error
+            }
+
+            function initCanvas() {
+                const raw = context_raw.getImageData(0, 0, canvas_raw.width, canvas_raw.height).data;
+                for (let i = 0; i < max_canvas; i++) { canvasses[i] = Uint8ClampedArray.from(raw); }
+            }
+
+            function setColor(x = 0, y = 0) {
+                if (set_color <= 0) { return; } // Return if no color is set tot be picked
+                const raw = context_raw.getImageData(0, 0, canvas_raw.width, canvas_raw.height).data; // Get image data
+                const index = ((y * canvas_raw.width) + x) * 4;
+                MASKS[set_color] = { r: raw[index], g: raw[index + 1], b: raw[index + 2] }
+                set_color = 0; // Stop color picker from picking multiple times
+            }
+
+            function mask() {
+                // TODO
+            }
+
+            function count() {
+                total = 0;
+                if (countInput.input.checked) {
+                    mask();
+                    // TODO
+                }
+                countInput.output.innerHTML = total;
+            }
+
+            // Starts running the script when the entire page has been loaded
+            checkDevice();
+        </script>
+    </body>
+</html>
