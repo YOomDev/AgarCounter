@@ -169,6 +169,30 @@
             function isColor(color, other) { return (color.r === other.r) && (color.g === other.g) && (color.b === other.b); }
 
             function mask() {
+                // Make average image to fix image noise from raw camera input
+                let average = Uint8ClampedArray.from(context_raw.getImageData(0, 0, canvas_raw.width, canvas_raw.height).data); // Make sure a array the correct size exists
+                const width = canvas_raw.width;
+                let row_index = 0;
+                let color_index = 0;
+                for (let y = 0; y < canvas_raw.height; y++) {
+                    row_index = y * width;
+                    for (let x = 0; x < width; x++) {
+                        color_index = (row_index + x) * 4; // times 4 cuz of 4 short integer values for each color part from rgba
+
+                        // Get average color
+                        let color = { r: 0, g: 0, b: 0 }
+                        for (let iterator = 0; iterator < max_canvas; iterator++) {
+                            color.r += canvasses[iterator][color_index    ];
+                            color.g += canvasses[iterator][color_index + 1];
+                            color.b += canvasses[iterator][color_index + 2];
+                        }
+
+                        // Set color
+                        average[color_index    ] = ~~(color.r / max_canvas); // ~~ = bitwise truncate to 32-bit integer
+                        average[color_index + 1] = ~~(color.g / max_canvas);
+                        average[color_index + 2] = ~~(color.b / max_canvas);
+                    }
+                }
                 // TODO
             }
 
