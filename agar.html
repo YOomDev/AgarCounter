@@ -160,6 +160,7 @@
                 const raw = context_raw.getImageData(0, 0, canvas_raw.width, canvas_raw.height).data; // Get image data
                 const index = ((y * canvas_raw.width) + x) * 4;
                 MASKS[set_color] = { r: raw[index], g: raw[index + 1], b: raw[index + 2] }
+                console.log(`Color ${set_color} has been set to `, MASKS[set_color]);
                 set_color = 0; // Stop color picker from picking multiple times
             }
 
