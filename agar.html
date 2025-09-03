@@ -165,6 +165,8 @@
                 set_color = 0; // Stop color picker from picking multiple times
             }
 
+            function isColor(color, other) { return (color.r === other.r) && (color.g === other.g) && (color.b === other.b); }
+
             function mask() {
                 // TODO
             }
