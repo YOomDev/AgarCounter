@@ -194,7 +194,20 @@
                         average[color_index + 2] = ~~(color.b / max_canvas);
                     }
                 }
-                // TODO
+
+                // Store min and max color for masking so we don't have to calculate them on the fly
+                const MIN = [];
+                for (let i = 0; i < MASKS.length - 1; i++) { MIN[i] = {
+                    r: MASKS[i + 1].r - (factor * MASKS[i + 1].r),
+                    g: MASKS[i + 1].g - (factor * MASKS[i + 1].g),
+                    b: MASKS[i + 1].b - (factor * MASKS[i + 1].b)
+                }; }
+                const MAX = [];
+                for (let i = 0; i < MASKS.length - 1; i++) { MIN[i] = {
+                    r: MASKS[i + 1].r + (factor * MASKS[i + 1].r),
+                    g: MASKS[i + 1].g + (factor * MASKS[i + 1].g),
+                    b: MASKS[i + 1].b + (factor * MASKS[i + 1].b)
+                }; }
             }
 
             function count() {
