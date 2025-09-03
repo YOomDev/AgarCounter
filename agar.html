@@ -197,6 +197,7 @@
                 }
 
                 // Store min and max color for masking so we don't have to calculate them on the fly
+                factor = getFactor();
                 const MIN = [];
                 for (let i = 0; i < MASKS.length - 1; i++) { MIN[i] = {
                     r: MASKS[i + 1].r - (factor * MASKS[i + 1].r),
@@ -233,8 +234,12 @@
                         mask[color_index    ] = mask_result.r;
                         mask[color_index + 1] = mask_result.g;
                         mask[color_index + 2] = mask_result.b;
+                        mask[color_index + 3] = 255;
                     }
                 }
+                let mask_image_data = context_mask.createImageData(canvas_mask.width, canvas_mask.height);
+                mask_image_data.data.set(mask);
+                context_mask.putImageData(mask_image_data, 0, 0);
             }
 
             function count() {
