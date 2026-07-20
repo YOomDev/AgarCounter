@@ -254,7 +254,7 @@
                     mask();
 
                     // Count the colonies using flood-fill
-                    let data = Uint8ClampedArray.from(canvas_count.getImageData(0, 0, canvas_count.width, canvas_count.height).data);
+                    let data = Uint8ClampedArray.from(context_count.getImageData(0, 0, canvas_count.width, canvas_count.height).data);
                     for (let x = 0; x < canvas_count.width; x++) {
                         for (let y = 0; y < canvas_count.height; y++) {
                             const color_index = x * y * 4;
