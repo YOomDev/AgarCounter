@@ -83,6 +83,7 @@
             const EMPTY  = 0;
             const AGAR   = 1;
             const COLONY = 2;
+            const FOUND  = 3;
 
             // Color variables
             let set_color = 0; // used for setting the mask colors, identifier for which color to be set
@@ -90,10 +91,12 @@
             MASKS[EMPTY ] = { r: 0, g: 0, b: 0 };
             MASKS[AGAR  ] = { r: 0, g: 0, b: 0 };
             MASKS[COLONY] = { r: 0, g: 0, b: 0 };
+            MASKS[FOUND ] = { r: 0, g: 0, b: 0 };
             const FILLS = [];
             FILLS[EMPTY ] = { r: 255, g: 255, b: 255 };
             FILLS[AGAR  ] = { r: 0  , g: 0  , b: 0   };
             FILLS[COLONY] = { r: 0  , g: 0  , b: 255 };
+            FILLS[FOUND ] = { r: 0  , g: 255, b: 0   };
 
             // Canvas variables
             let set_canvas = 0;
@@ -104,11 +107,16 @@
             let context_mask = canvas_mask.getContext("2d");
             let canvas_count = document.querySelector('#debug');
             let context_count = canvas_count.getContext("2d");
+            let canvas_found = document.querySelector('#found');
+            let context_found = canvas_found.getContext("2d");
             const canvasses = [];
+            let width = 0;
+            let height = 0;
 
             // Counting
             let min_size = 5;
             let factor = getFactor();
+            const recent_colonies_found = [];
 
             // Device
             const video = document.querySelector('video'); // Video source such as webcam or digital microscope
@@ -128,10 +136,16 @@
                         video.srcObject = stream; // Get data stream from camera
 
                         // Copy camera width and height to the canvasses
-                        canvas_raw.width = stream.getVideoTracks()[0].getSettings().width;
-                        canvas_raw.height = stream.getVideoTracks()[0].getSettings().height;
-                        canvas_mask.width = canvas_raw.width;
-                        canvas_mask.height = canvas_raw.height;
+                        width = stream.getVideoTracks()[0].getSettings().width;
+                        height = stream.getVideoTracks()[0].getSettings().height;
+                        canvas_raw.width = width;
+                        canvas_raw.height = height;
+                        canvas_mask.width = width;
+                        canvas_mask.height = height;
+                        canvas_count.width = width;
+                        canvas_count.height = height;
+                        canvas_found.width = width;
+                        canvas_found.height = height;
 
                         // Make color picker work
                         canvas_raw.addEventListener('click', e => {
@@ -250,8 +264,14 @@
                 canvasses[set_canvas++] = Uint8ClampedArray.from(context_raw.getImageData(0, 0, canvas_raw.width, canvas_raw.height).data);
                 if(set_canvas >= max_canvas) { set_canvas = 0; }
                 total = 0;
+                const display = context_raw.getImageData(0, 0, width, height).data;
                 if (countInput.input.checked) {
                     mask();
+
+                    // Clear the recently found colonies
+                    while (recent_colonies_found.length > 0) {
+                        recent_colonies_found.pop();
+                    }
 
                     // Count the colonies using flood-fill
                     let data = Uint8ClampedArray.from(context_count.getImageData(0, 0, canvas_count.width, canvas_count.height).data);
@@ -262,6 +282,8 @@
                             if (isColor(pixelColor, FILLS[COLONY])) {
                                 let flooded = 0;
                                 const pixelsToCheck = [x, y];
+                                let total_x = 0;
+                                let total_y = 0;
 
                                 while (pixelsToCheck.length > 0) {
                                     const ty = pixelsToCheck.pop();
@@ -277,6 +299,12 @@
                                         data[color_index + 3] = 255;
                                         flooded++;
 
+                                        // Set found cells
+                                        data[color_index    ] = FILLS[FOUND].r;
+                                        data[color_index + 1] = FILLS[FOUND].g;
+                                        data[color_index + 2] = FILLS[FOUND].b;
+                                        data[color_index + 3] = 255;
+
                                         // Add pixels to check
                                         pixelsToCheck.push(tx + 1, ty);
                                         pixelsToCheck.push(tx - 1, ty);
@@ -287,12 +315,22 @@
 
                                 // Check if size is big enough to count
                                 if (flooded > min_size) {
+                                    // Add the center of the colony, and from which pixel it was found to the list
+                                    recent_colonies_found.push({ x: total_x / total, y : total_y / total, found: { x: x, y: y } });
+
+                                    // Increase total
                                     total++;
                                 }
                             }
                         }
                     }
                 }
+
+                // Display where the colonies have been found
+                for (let i = 0; i < recent_colonies_found.length; i++) {
+                    const color_index = 0; // TODO... set the centers of each fo the colonies to red?
+                }
+                context_found.putImageData(display, 0, 0);
                 countInput.output.innerHTML = total;
             }
 
