@@ -169,7 +169,7 @@
 
             function initCanvas() {
                 context_raw.drawImage(video, 0, 0);
-                const raw = context_raw.getImageData(0, 0, canvas_raw.width, canvas_raw.height).data;
+                const raw = context_raw.getImageData(0, 0, width, height).data;
                 for (let i = 0; i < max_canvas; i++) { canvasses[i] = Uint8ClampedArray.from(raw); }
             }
 
@@ -186,12 +186,11 @@
 
             function mask() {
                 // Make average image to fix image noise from raw camera input
-                let average = Uint8ClampedArray.from(context_raw.getImageData(0, 0, canvas_raw.width, canvas_raw.height).data); // Make sure an array with the correct size exists
-                let mask = Uint8ClampedArray.from(context_mask.getImageData(0, 0, canvas_raw.width, canvas_raw.height).data);
-                const width = canvas_raw.width;
+                let average = Uint8ClampedArray.from(context_raw.getImageData(0, 0, width, height).data); // Make sure an array with the correct size exists
+                let mask = Uint8ClampedArray.from(context_mask.getImageData(0, 0, width, height).data);
                 let row_index = 0;
                 let color_index = 0;
-                for (let y = 0; y < canvas_raw.height; y++) {
+                for (let y = 0; y < height; y++) {
                     row_index = y * width;
                     for (let x = 0; x < width; x++) {
                         color_index = (row_index + x) * 4; // times 4 cuz of 4 short integer values for each color part from rgba
@@ -227,7 +226,7 @@
                 }; }
 
                 // Perform masking
-                for (let y = 0; y < canvas_raw.height; y++) {
+                for (let y = 0; y < height; y++) {
                     row_index = y * width;
                     for (let x = 0; x < width; x++) {
                         color_index = (row_index + x) * 4;
@@ -252,17 +251,15 @@
                         mask[color_index + 3] = 255;
                     }
                 }
-                let mask_image_data = context_mask.createImageData(canvas_mask.width, canvas_mask.height);
+                let mask_image_data = context_mask.createImageData(width, height);
                 mask_image_data.data.set(mask);
                 context_mask.putImageData(mask_image_data, 0, 0);
-                canvas_count.width = canvas_mask.width;
-                canvas_count.height = canvas_mask.height;
                 context_count.putImageData(mask_image_data, 0, 0);
             }
 
             function count() {
                 context_raw.drawImage(video, 0, 0);
-                canvasses[set_canvas++] = Uint8ClampedArray.from(context_raw.getImageData(0, 0, canvas_raw.width, canvas_raw.height).data);
+                canvasses[set_canvas++] = Uint8ClampedArray.from(context_raw.getImageData(0, 0, width, height).data);
                 if(set_canvas >= max_canvas) { set_canvas = 0; }
                 total = 0;
                 const display = context_raw.getImageData(0, 0, width, height).data;
@@ -275,10 +272,10 @@
                     }
 
                     // Count the colonies using flood-fill
-                    let data = Uint8ClampedArray.from(context_count.getImageData(0, 0, canvas_count.width, canvas_count.height).data);
-                    for (let x = 0; x < canvas_count.width; x++) {
-                        for (let y = 0; y < canvas_count.height; y++) {
-                            let color_index = x * y * 4;
+                    let data = Uint8ClampedArray.from(context_count.getImageData(0, 0, width, height).data);
+                    for (let x = 0; x < width; x++) {
+                        for (let y = 0; y < height; y++) {
+                            let color_index = x * (y * width) * 4;
                             let pixelColor = { r: data[color_index], g: data[color_index + 1], b: data[color_index + 2] };
                             if (isColor(pixelColor, FILLS[COLONY])) {
                                 let flooded = 0;
@@ -289,7 +286,7 @@
                                 while (pixelsToCheck.length > 0) {
                                     const ty = pixelsToCheck.pop();
                                     const tx = pixelsToCheck.pop();
-                                    color_index = tx * ty * 4;
+                                    color_index = tx * (ty * width) * 4;
                                     pixelColor = { r: data[color_index], g: data[color_index + 1], b: data[color_index + 2] };
 
                                     if (isColor(pixelColor, FILLS[COLONY])) {
