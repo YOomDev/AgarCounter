@@ -257,11 +257,38 @@
                     let data = Uint8ClampedArray.from(context_count.getImageData(0, 0, canvas_count.width, canvas_count.height).data);
                     for (let x = 0; x < canvas_count.width; x++) {
                         for (let y = 0; y < canvas_count.height; y++) {
-                            const color_index = x * y * 4;
-                            const pixelColor = { r: data[color_index], g: data[color_index + 1], b: data[color_index + 2] };
+                            let color_index = x * y * 4;
+                            let pixelColor = { r: data[color_index], g: data[color_index + 1], b: data[color_index + 2] };
                             if (isColor(pixelColor, FILLS[COLONY])) {
-                                // TODO: flood-fill
-                                total++;
+                                let flooded = 0;
+                                const pixelsToCheck = [x, y];
+
+                                while (pixelsToCheck.length > 0) {
+                                    const ty = pixelsToCheck.pop();
+                                    const tx = pixelsToCheck.pop();
+                                    color_index = tx * ty * 4;
+                                    pixelColor = { r: data[color_index], g: data[color_index + 1], b: data[color_index + 2] };
+
+                                    if (isColor(pixelColor, FILLS[COLONY])) {
+                                        // Set mask to checked/no more found
+                                        data[color_index    ] = FILLS[EMPTY].r;
+                                        data[color_index + 1] = FILLS[EMPTY].g;
+                                        data[color_index + 2] = FILLS[EMPTY].b;
+                                        data[color_index + 3] = 255;
+                                        flooded++;
+
+                                        // Add pixels to check
+                                        pixelsToCheck.push(tx + 1, ty);
+                                        pixelsToCheck.push(tx - 1, ty);
+                                        pixelsToCheck.push(tx, ty + 1);
+                                        pixelsToCheck.push(tx, ty - 1);
+                                    }
+                                }
+
+                                // Check if size is big enough to count
+                                if (flooded > min_size) {
+                                    total++;
+                                }
                             }
                         }
                     }
