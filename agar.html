@@ -298,10 +298,10 @@
                                         flooded++;
 
                                         // Set found cells
-                                        data[color_index    ] = FILLS[FOUND].r;
-                                        data[color_index + 1] = FILLS[FOUND].g;
-                                        data[color_index + 2] = FILLS[FOUND].b;
-                                        data[color_index + 3] = 255;
+                                        display[color_index    ] = FILLS[FOUND].r;
+                                        display[color_index + 1] = FILLS[FOUND].g;
+                                        display[color_index + 2] = FILLS[FOUND].b;
+                                        display[color_index + 3] = 255;
 
                                         // Add pixels to check
                                         pixelsToCheck.push(tx + 1, ty);
