@@ -324,11 +324,21 @@
                     }
                 }
 
-                // Display where the colonies have been found
+                // Display the center of each colony
                 for (let i = 0; i < recent_colonies_found.length; i++) {
-                    const color_index = 0; // TODO... set the centers of each fo the colonies to red?
+                    const colony = recent_colonies_found[i];
+                    const color_index = ((colony.y * width) + colony.x) * 4;
+                    console.log({ x: colony.x, y: colony.y });
+
+                    // Set the center of the colony to red
+                    display[color_index    ] = 255;
+                    display[color_index + 1] = 0;
+                    display[color_index + 2] = 0;
+                    display[color_index + 3] = 255;
                 }
-                context_found.putImageData(display, 0, 0);
+                const found_image_data = context_mask.createImageData(width, height);
+                found_image_data.data.set(display);
+                context_found.putImageData(found_image_data, 0, 0);
                 countInput.output.innerHTML = total;
             }
 
