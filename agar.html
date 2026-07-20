@@ -275,7 +275,7 @@
                     let data = Uint8ClampedArray.from(context_count.getImageData(0, 0, width, height).data);
                     for (let x = 0; x < width; x++) {
                         for (let y = 0; y < height; y++) {
-                            let color_index = x * (y * width) * 4;
+                            let color_index = ((y * width) + x) * 4;
                             let pixelColor = { r: data[color_index], g: data[color_index + 1], b: data[color_index + 2] };
                             if (isColor(pixelColor, FILLS[COLONY])) {
                                 let flooded = 0;
@@ -286,7 +286,7 @@
                                 while (pixelsToCheck.length > 0) {
                                     const ty = pixelsToCheck.pop();
                                     const tx = pixelsToCheck.pop();
-                                    color_index = tx * (ty * width) * 4;
+                                    color_index = ((ty * width) + tx) * 4;
                                     pixelColor = { r: data[color_index], g: data[color_index + 1], b: data[color_index + 2] };
 
                                     if (isColor(pixelColor, FILLS[COLONY])) {
