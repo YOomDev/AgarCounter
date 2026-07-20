@@ -314,7 +314,7 @@
                                 // Check if size is big enough to count
                                 if (flooded > min_size) {
                                     // Add the center of the colony, and from which pixel it was found to the list
-                                    recent_colonies_found.push({ x: total_x / total, y : total_y / total, found: { x: x, y: y } });
+                                    recent_colonies_found.push({ x: total_x / flooded, y: total_y / flooded, found: { x: x, y: y } });
 
                                     // Increase total
                                     total++;
