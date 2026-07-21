@@ -16,6 +16,7 @@
                 <h1>Parts used for getting webcam data</h1>
                 <device type="media"></device>
                 <video autoplay></video>
+                <canvas id="raw" width="320" height="240"></canvas>
                 <canvas id="mask" width="320" height="240"></canvas>
             </div>
             <div id="loading">
@@ -24,7 +25,6 @@
                 <p>Waiting for webcam input</p>
             </div>
             <div class="hidden" id="main">
-                <canvas id="raw" width="320" height="240"></canvas>
                 <canvas id="found" width="320" height="240"></canvas>
                 <div class="count">
                     <h1>Count</h1>
@@ -144,8 +144,8 @@
                         canvas_found.height = height;
 
                         // Make color picker work
-                        canvas_raw.addEventListener('click', e => {
-                            let rect = canvas_raw.getBoundingClientRect(); // Get canvas offset
+                        canvas_found.addEventListener('click', e => {
+                            let rect = canvas_found.getBoundingClientRect(); // Get canvas offset
                             setColor(e.clientX - rect.left, e.clientY - rect.top);
                         });
 
@@ -345,19 +345,19 @@
                             }
                         }
                     }
+                    for (let i = 0; i < recent_colonies_found.length; i++) {
+                        const colony = recent_colonies_found[i];
+                        const color_index = ((colony.y * width) + colony.x) * 4;
+
+                        // Set the center of the colony to red
+                        display[color_index    ] = 255;
+                        display[color_index + 1] = 0;
+                        display[color_index + 2] = 0;
+                        display[color_index + 3] = 255;
+                    }
                 }
 
                 // Display the center of each colony
-                for (let i = 0; i < recent_colonies_found.length; i++) {
-                    const colony = recent_colonies_found[i];
-                    const color_index = ((colony.y * width) + colony.x) * 4;
-
-                    // Set the center of the colony to red
-                    display[color_index    ] = 255;
-                    display[color_index + 1] = 0;
-                    display[color_index + 2] = 0;
-                    display[color_index + 3] = 255;
-                }
                 const found_image_data = context_mask.createImageData(width, height);
                 found_image_data.data.set(display);
                 context_found.putImageData(found_image_data, 0, 0);
