@@ -286,6 +286,12 @@
                                 while (pixelsToCheck.length > 0) {
                                     const ty = pixelsToCheck.pop();
                                     const tx = pixelsToCheck.pop();
+
+                                    if (tx < 0) { continue; }
+                                    if (tx >= width) { continue; }
+                                    if (ty < 0) { continue; }
+                                    if (ty >= height) { continue; }
+
                                     color_index = ((ty * width) + tx) * 4;
                                     pixelColor = { r: data[color_index], g: data[color_index + 1], b: data[color_index + 2] };
 
