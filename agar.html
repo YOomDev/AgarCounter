@@ -287,6 +287,7 @@
                                 let total_x = 0;
                                 let total_y = 0;
 
+                                const to_flood = [];
                                 while (pixelsToCheck.length > 0) {
                                     const ty = pixelsToCheck.pop();
                                     const tx = pixelsToCheck.pop();
@@ -308,14 +309,28 @@
 
                                         // Add info for colony position calculation
                                         flooded++;
+                                        if (flooded >= min_size) {
+                                            // Mark flooded cells only if they exceed the minimum amount
+                                            display[color_index    ] = FILLS[FOUND].r;
+                                            display[color_index + 1] = FILLS[FOUND].g;
+                                            display[color_index + 2] = FILLS[FOUND].b;
+                                            display[color_index + 3] = 255;
+
+                                            while (to_flood.length > 0) {
+                                                const fy = to_flood.pop();
+                                                const fx = to_flood.pop();
+                                                const flood_index = ((fy * width) + fx) * 4;
+
+                                                display[flood_index    ] = FILLS[FOUND].r;
+                                                display[flood_index + 1] = FILLS[FOUND].g;
+                                                display[flood_index + 2] = FILLS[FOUND].b;
+                                                display[flood_index + 3] = 255;
+                                            }
+                                        } else { // If not enough cells are found to count as a colony add them to a stack for later flooding
+                                            to_flood.push(tx, ty);
+                                        }
                                         total_x += tx;
                                         total_y += ty;
-
-                                        // Set found cells
-                                        display[color_index    ] = FILLS[FOUND].r;
-                                        display[color_index + 1] = FILLS[FOUND].g;
-                                        display[color_index + 2] = FILLS[FOUND].b;
-                                        display[color_index + 3] = 255;
 
                                         // Add pixels to check
                                         pixelsToCheck.push(tx + 1, ty);
@@ -326,7 +341,7 @@
                                 }
 
                                 // Check if size is big enough to count
-                                if (flooded > min_size) {
+                                if (flooded >= min_size) {
                                     // Add the center of the colony, and from which pixel it was found to the list
                                     recent_colonies_found.push({ x: ~~(total_x / flooded), y: ~~(total_y / flooded), found: { x: x, y: y } });
 
