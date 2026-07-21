@@ -4,15 +4,19 @@
         <meta charset="UTF-8">
         <title>Agar Counter | v0.2</title>
         <style>
-            .hidden {
-                display: none;
-                visibility: hidden;
-            }
             h1, h2, p {
                 text-align: center;
             }
-            table, th, td {
+            table, div {
+                margin: 0 auto; /* this centers the item */
+                width: max-content;
+            }
+            th, td {
                 border: 1px solid black;
+            }
+            .hidden {
+                display: none;
+                visibility: hidden;
             }
         </style>
     </head>
@@ -40,9 +44,11 @@
                             <td>
                                 <div class="count">
                                     <h1>Count</h1>
-                                    <input type="checkbox" id="count">
-                                    <label for="count">Perform count</label>
                                     <p id="countValue">0</p>
+                                    <div>
+                                        <input type="checkbox" id="count">
+                                        <label for="count">Perform count</label>
+                                    </div>
                                 </div>
                             </td>
                         </tr>
@@ -53,26 +59,35 @@
                         </tr>
                         <tr>
                             <td>
-                                <button type="button" onclick="set_color = AGAR">Set agar mask color</button>
+                                <div>
+                                    <button type="button" onclick="set_color = AGAR">Set agar mask color</button>
+                                </div>
                             </td>
                             <td>
-                                <button type="button" onclick="set_color = COLONY">Set Colony mask color</button>
+                                <div>
+                                    <button type="button" onclick="set_color = COLONY">Set Colony mask color</button>
+                                </div>
                             </td>
                         </tr>
                         <tr>
                             <td>
                                 <div class="factor">
                                     <h2>Factor</h2>
-                                    <input type="range" min="0" max="1000" value="300" id="factor">
-                                    <label for="factor">Factor</label>
-                                    <span id="factorValue"></span>
+                                    <div>
+                                        <input type="range" min="0" max="1000" value="300" id="factor">
+                                        <label for="factor">Factor</label>
+                                        <span id="factorValue"></span>
+                                    </div>
                                 </div>
                             </td>
                             <td>
                                 <div class="minimum">
                                     <h2>Minimum</h2>
-                                    <input type="number" min="1" max="1000" value="5" id="minimum">
-                                    <label for="minimum">Minimum amount of pixels for a colony to be counted</label>
+                                    <div>
+                                        <input type="number" min="1" max="1000" value="5" id="minimum">
+                                        <label for="minimum" class="hidden"></label>
+                                    </div>
+                                    <p>Minimum amount of pixels for a colony to be counted</p>
                                 </div>
                             </td>
                         </tr>
