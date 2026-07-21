@@ -154,17 +154,21 @@
                             setColor(e.clientX - rect.left, e.clientY - rect.top);
                         });
 
-                        // Make sure the required stuff for counting gets set up
-                        initCanvas();
-
-                        // Call the count function every set timeframe
-                        setInterval(count, 100 /* milliseconds */);
-
-                        // Remove div that shows the webcam is loading
-                        document.getElementById("loading").remove();
-                        document.getElementById("main").classList.remove("hidden");
-
+                        video.onloadeddata = onVideoReady;
+                        if (video.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA) { onVideoReady(); }
                     }).catch(function (e) { noDevice(); console.log(e); }); // If no source: give error
+            }
+
+            function onVideoReady() {
+                // Make sure the required stuff for counting gets set up
+                initCanvas();
+
+                // Call the count function every set timeframe
+                setInterval(count, 100 /* milliseconds */);
+
+                // Remove div that shows the webcam is loading
+                document.getElementById("loading").remove();
+                document.getElementById("main").classList.remove("hidden");
             }
 
             function initCanvas() {
