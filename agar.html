@@ -17,7 +17,6 @@
                 <device type="media"></device>
                 <video autoplay></video>
                 <canvas id="mask" width="320" height="240"></canvas>
-                <canvas id="debug" width="320" height="240"></canvas>
             </div>
             <div id="loading">
                 <h1>Loading everything that's needed</h1>
@@ -106,8 +105,6 @@
             let context_raw = canvas_raw.getContext("2d");
             let canvas_mask = document.querySelector('#mask');
             let context_mask = canvas_mask.getContext("2d");
-            let canvas_count = document.querySelector('#debug');
-            let context_count = canvas_count.getContext("2d");
             let canvas_found = document.querySelector('#found');
             let context_found = canvas_found.getContext("2d");
             const canvasses = [];
@@ -143,8 +140,6 @@
                         canvas_raw.height = height;
                         canvas_mask.width = width;
                         canvas_mask.height = height;
-                        canvas_count.width = width;
-                        canvas_count.height = height;
                         canvas_found.width = width;
                         canvas_found.height = height;
 
@@ -258,7 +253,6 @@
                 let mask_image_data = context_mask.createImageData(width, height);
                 mask_image_data.data.set(mask);
                 context_mask.putImageData(mask_image_data, 0, 0);
-                context_count.putImageData(mask_image_data, 0, 0);
             }
 
             function count() {
@@ -276,7 +270,7 @@
                     }
 
                     // Count the colonies using flood-fill
-                    let data = Uint8ClampedArray.from(context_count.getImageData(0, 0, width, height).data);
+                    let data = Uint8ClampedArray.from(context_mask.getImageData(0, 0, width, height).data);
                     for (let x = 0; x < width; x++) {
                         for (let y = 0; y < height; y++) {
                             let color_index = ((y * width) + x) * 4;
