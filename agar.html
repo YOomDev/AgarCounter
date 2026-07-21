@@ -43,7 +43,11 @@
                     <label for="factor">Magic number</label>
                     <span id="factorValue"></span>
                 </div>
-
+                <div class="minimum">
+                    <h2>Minimum</h2>
+                    <input type="number" min="1" max="1000" value="5" id="minimum">
+                    <label for="minimum">Minimum amount of pixels for a colony to be counted</label>
+                </div>
             </div>
         </div>
         <script>
@@ -74,6 +78,9 @@
                 input: document.querySelector('#count'),
                 output: document.querySelector('#countValue')
             }
+
+            // Input for the minimum pixels needed to be counted as a colony
+            const minimumInput = document.querySelector('#minimum');
 
             ////////////////
             // Variables: //
@@ -256,6 +263,12 @@
             }
 
             function count() {
+                if (minimumInput.value !== min_size) {
+                    if (minimumInput.value > 0 && minimumInput.value < 1000 + 1) {
+                        min_size = minimumInput.value;
+                    }
+                }
+
                 context_raw.drawImage(video, 0, 0);
                 canvasses[set_canvas++] = Uint8ClampedArray.from(context_raw.getImageData(0, 0, width, height).data);
                 if(set_canvas >= max_canvas) { set_canvas = 0; }
