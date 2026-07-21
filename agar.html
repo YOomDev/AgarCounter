@@ -261,7 +261,7 @@
                 context_raw.drawImage(video, 0, 0);
                 canvasses[set_canvas++] = Uint8ClampedArray.from(context_raw.getImageData(0, 0, width, height).data);
                 if(set_canvas >= max_canvas) { set_canvas = 0; }
-                total = 0;
+                let total = 0;
                 const display = context_raw.getImageData(0, 0, width, height).data;
                 if (countInput.input.checked) {
                     mask();
