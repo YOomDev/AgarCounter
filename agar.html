@@ -237,8 +237,8 @@
                         let mask_result = FILLS[EMPTY];
                         for (let i = 0; i < FILLS.length - 1; i++) {
                             if( color.r < MIN[i].r || color.r > MAX[i].r ||
-                                color.g < MIN[i].r || color.r > MAX[i].r ||
-                                color.b < MIN[i].b || color.r > MAX[i].r
+                                color.g < MIN[i].g || color.g > MAX[i].g ||
+                                color.b < MIN[i].b || color.b > MAX[i].b
                             ) { continue; } // If not out of expected range for mask then we check next mask
                             mask_result = FILLS[i + 1]; // Set masked color
                             break;
